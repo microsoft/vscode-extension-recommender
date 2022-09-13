@@ -1,0 +1,37 @@
+import { expect } from "chai";
+import { SessionOperations, SessionResult } from "../lib";
+
+const expectedRelativeConfidence = 0.8;
+
+function expectExtension(results: Array<SessionResult>, extensionIds: string[] | string) {
+	const resultIds = results.map(r => r.extensionId);
+	for (const extensionId of Array.isArray(extensionIds) ? extensionIds : [extensionIds]) {
+		const result = results.find(r => r.extensionId === extensionId);
+		expect(result, `${extensionId} in [${resultIds.join(', ')}]`).to.not.be.undefined;
+		expect(result!.confidence, `Confidence for ${extensionId} greater than ${expectedRelativeConfidence}`).to.be.greaterThan(expectedRelativeConfidence);
+	}
+}
+
+describe('describe', () => {
+	const sessionOperations = new SessionOperations();
+	
+	it('test Python extension', async () => {
+		const result = await sessionOperations.run({
+			previouslyInstalled: ['ms-python.python']
+		});
+
+		expectExtension(result, ['ms-toolsai.jupyter']);
+	});
+
+	it('test Python file', async () => {
+		expectExtension(await sessionOperations.run({
+			openedFileTypes: ['.py']
+		}), ['ms-python.python']);
+	});
+
+	it('test Python file normalized', async () => {
+		expectExtension(await sessionOperations.run({
+			openedFileTypes: ['py']
+		}), ['ms-python.python']);
+	});
+});

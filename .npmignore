@@ -1,0 +1,6 @@
+test
+.vscode
+lib
+tsconfig.json
+webpack.config.js
+**/*.map
