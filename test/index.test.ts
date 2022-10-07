@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import { SessionOperations, SessionResult } from "../lib";
 
@@ -14,24 +19,27 @@ function expectExtension(results: Array<SessionResult>, extensionIds: string[] |
 
 describe('describe', () => {
 	const sessionOperations = new SessionOperations();
-	
-	it('test Python extension', async () => {
-		const result = await sessionOperations.run({
-			previouslyInstalled: ['ms-python.python']
-		});
 
-		expectExtension(result, ['ms-toolsai.jupyter']);
-	});
-
-	it('test Python file', async () => {
+	it('test file', async () => {
 		expectExtension(await sessionOperations.run({
 			openedFileTypes: ['.py']
 		}), ['ms-python.python']);
 	});
 
-	it('test Python file normalized', async () => {
+	it('test file normalized', async () => {
 		expectExtension(await sessionOperations.run({
 			openedFileTypes: ['py']
 		}), ['ms-python.python']);
+	});
+
+	it('test workspace dependency', async () => {
+		const results = await sessionOperations.run({
+			workspaceDependencies: ['workspace.npm.@playwright/test']
+		});
+		console.log(results);
+
+		expectExtension(await sessionOperations.run({
+			workspaceDependencies: ['workspace.npm.vue']
+		}), ['vue.volar']);
 	});
 });
