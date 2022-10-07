@@ -7,14 +7,52 @@ import { Tensor, InferenceSession } from 'onnxruntime-web';
 
 export interface SessionResult {
 	extensionId: string;
+	/**
+	 * Confidence between 0 (no confidence) and 1 (maximum confidence)
+	 */
 	confidence: number;
 }
 export interface SessionInputs {
+	/**
+	 * List of extensions that are current installed and enabled.
+	 * 
+	 * @example ['ms-python.python', 'ms-vscode.csharp']
+	 */
 	previouslyInstalled?: string[],
+	/**
+	 * The file types that are currently open in the editor.
+	 * Important: Lowercase and includes the '.'
+	 * 
+	 * @example ['.py', '.js']
+	 */
 	openedFileTypes?: string[],
+	/**
+	 * List of extensions that activated in the current session.
+	 * 
+	 * @example ['ms-python.python', 'ms-vscode.csharp]'
+	 */
 	activatedExtensions?: string[],
+	/**
+	 * List of dependencies in the current workspace, based on workspace tags.
+	 * 
+	 * @see https://github.com/microsoft/vscode/blob/9fb452c4852ef098206ec67a2b236ad5fd0ba828/src/vs/workbench/contrib/tags/electron-sandbox/workspaceTagsService.ts#L303-L563
+	 * @example ['workspace.npm.react', 'workspace.npm.playwright']
+	 */
 	workspaceDependencies?: string[],
+	/**
+	 * File types in the current workspace.
+	 * Important: *Without* the initial '.' (unlike `openedFileTypes`).
+	 * 
+	 * @see https://github.com/microsoft/vscode/blob/8636541385743e44f861c46e9dfda74de76e8179/src/vs/platform/diagnostics/node/diagnosticsService.ts#L511-L525
+	 * @example ['py', 'js']
+	 */
 	workspaceFileTypes?: string[],
+	/**
+	 * List of kinds of configuration files in the workspace.
+	 * 
+	 * @see https://github.com/microsoft/vscode/blob/8636541385743e44f861c46e9dfda74de76e8179/src/vs/platform/diagnostics/node/diagnosticsService.ts#L49-L69
+	 * @example ['package.json', 'tsconfig.json']
+	 */
 	workspaceConfigTypes?: string[]
 }
 
@@ -23,8 +61,8 @@ export class SessionOperations {
 	private _featuresSize: number = 0;
 	private _extensionIds: Map<string, number> = new Map();
 	private _featureEncodings: Map<string, Map<string, number>> = new Map();
-	private _tensor: Uint8Array = new Uint8Array();
-	private _signalTensor: Uint8Array = new Uint8Array();
+	private _inputTensor?: Int32Array;
+	private _outputTensor?: Float32Array;
 
 	private async loadSession() {
 		if (this._session) {
@@ -52,11 +90,18 @@ export class SessionOperations {
 				this._featureEncodings.set(name, map);
 			}
 		}
-		this._tensor = new Uint8Array(this._extensionIds.size * this._featuresSize);
-		this._signalTensor = new Uint8Array(this._featuresSize);
+		this._inputTensor = new Int32Array(this._extensionIds.size * this._featuresSize);
+		this._outputTensor = new Float32Array(this._extensionIds.size);
 	}
 
-	public async run(inputs: SessionInputs, confidencePass = 0.6): Promise<Array<SessionResult>> {
+	/**
+	 * 
+	 * @param inputs Workspace signals that are used to predict the next extension to be installed.
+	 * @param confidencePass Minimum confidence required for each recommended extension.
+	 * @param inferenceOptions Override for ORT inference options.
+	 * @returns List of extension ids, each with a confidence scores.
+	 */
+	public async run(inputs: SessionInputs, confidencePass = 0.6, inferenceOptions?: InferenceSession.RunOptions | undefined): Promise<Array<SessionResult>> {
 		await this.loadSession();
 
 		const input: Map<string, Set<string>> = new Map();
@@ -80,7 +125,7 @@ export class SessionOperations {
 		}
 
 		// First build signal vector based on input, this will be same for all candidate extensions' score calculation.
-		const signalTensor = this._signalTensor.fill(0);
+		const tensor = this._inputTensor!.fill(0);
 		for (const [featureName, featureMap] of this._featureEncodings) {
 			const featureSet = input.get(featureName);
 			if (!featureSet) {
@@ -89,7 +134,7 @@ export class SessionOperations {
 			for (const feature of featureSet.values()) {
 				const index = featureMap.get(feature);
 				if (index != undefined) {
-					signalTensor[index] = 1;
+					tensor[index] = 1;
 				} else {
 					console.warn('Invalid', featureName, feature);
 				}
@@ -97,8 +142,6 @@ export class SessionOperations {
 		}
 
 		// Then, repeat signalVector N times, here N is the number of candidate extensions, because the Session will predict a score to each candidate extensions
-		const tensor = this._tensor;
-		tensor.set(signalTensor);
 		const featuresSize = this._featuresSize;
 		for (let i = 1; i < featuresSize; i++) {
 			tensor.copyWithin(i * featuresSize, 0, featuresSize);
@@ -109,10 +152,15 @@ export class SessionOperations {
 			tensor[i * featuresSize + i] = 1;
 		}
 
-		// performance.mark('predict');
-		const results = await this._session!.run({ inputs: new Tensor(tensor, [extensionSize, featuresSize]) });
-		// performance.measure('predict');
-		const data = results.output_1.data as Float32Array;
+		const outputTensor = this._outputTensor!;
+		const outputName = this._session!.outputNames[0];
+		const result = await this._session!.run({ inputs: new Tensor(tensor, [extensionSize, featuresSize]) }, {
+			[outputName]: new Tensor(outputTensor, [outputTensor.length, 1])
+		}, {
+			logVerbosityLevel: 3,
+			...inferenceOptions
+		});
+		const data = result[outputName].data as Float32Array;
 
 		const scores: Array<SessionResult> = [];
 		for (const [extensionId, index] of this._extensionIds) {
