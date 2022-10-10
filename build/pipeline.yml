@@ -1,0 +1,37 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+pr: none
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: microsoft/vscode-engineering
+      ref: main
+      endpoint: Monaco
+
+parameters:
+  - name: publishPackage
+    displayName: 🚀 Publish vscode-extension-recommender
+    type: boolean
+    default: false
+
+extends:
+  template: azure-pipelines/npm-package/pipeline.yml@templates
+  parameters:
+    npmPackages:
+      - name: vscode-extension-recommender
+
+        buildSteps:
+          - script: npm ci
+            displayName: Install dependencies
+
+        testSteps:
+          - script: npm run test
+            displayName: Test npm package
+
+        publishPackage: ${{ parameters.publishPackage }}
