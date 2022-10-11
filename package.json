@@ -1,6 +1,6 @@
 {
   "name": "@vscode/vscode-extension-recommender",
-  "version": "0.1",
+  "version": "0.0.1",
   "description": "Deep learning model to recommend the best extension for a given VS Code workspace",
   "private": true,
   "main": "dist/index.js",
