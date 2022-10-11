@@ -30,6 +30,9 @@ extends:
           - script: npm ci
             displayName: Install dependencies
 
+          - script: npm run build
+            displayName: Compile npm package
+
         testSteps:
           - script: npm run test
             displayName: Test npm package
