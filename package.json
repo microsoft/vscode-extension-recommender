@@ -10,7 +10,6 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "pretest-nope": "npm run clean && tsc --build ./test",
     "prepublish": "npm test && npm run build",
     "prepack": "npm run build",
     "clean": "rimraf dist",
@@ -28,7 +27,8 @@
       "ts"
     ],
     "spec": "test/*.test.ts",
-    "require": "ts-node/register"
+    "require": "ts-node/register",
+    "timeout": "5000"
   },
   "bugs": {
     "url": "https://github.com/microsoft/vscode-extension-recommender/issues"
