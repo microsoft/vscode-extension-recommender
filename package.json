@@ -1,6 +1,6 @@
 {
   "name": "@vscode/vscode-extension-recommender",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Deep learning model to recommend the best extension for a given VS Code workspace",
   "private": true,
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "npm test && npm run build",
+    "prepublishOnly": "npm test && npm run build",
     "prepack": "npm run build",
     "clean": "rimraf dist",
     "watch": "npm run clean && webpack --watch",
@@ -22,6 +22,7 @@
     "url": "git+https://github.com/microsoft/vscode-extension-recommender.git"
   },
   "author": "Harald Kirschner",
+  "license": "MIT",
   "mocha": {
     "extension": [
       "ts"
