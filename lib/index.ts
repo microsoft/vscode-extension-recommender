@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Tensor, InferenceSession } from 'onnxruntime-web';
+import { Tensor, InferenceSession, env } from 'onnxruntime-web';
 
 export interface SessionResult {
 	extensionId: string;
@@ -72,6 +72,7 @@ export class SessionOperations {
 		const path = await import('path');
 		const modelPath = path.join(__dirname, '..', 'model');
 
+		env.wasm.numThreads = 1;
 		this._session = await InferenceSession.create(path.join(modelPath, 'model.onnx'), {
 			executionProviders: ['wasm']
 		});
