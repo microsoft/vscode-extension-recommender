@@ -1,6 +1,8 @@
 build
 test
 .vscode
+.github
+cli
 lib
 tsconfig.json
 webpack.config.js
