@@ -1,12 +1,9 @@
 {
   "name": "@vscode/vscode-extension-recommender",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Deep learning model to recommend the best extension for a given VS Code workspace",
-  "main": "dist/index.js",
-  "bin": {
-    "vscode-extension-recommender": "cli/index.js"
-  },
-  "module": "dist/index.js",
+  "main": "dist/lib/index.js",
+  "module": "dist/lib/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "prepublishOnly": "npm test && npm run build",
