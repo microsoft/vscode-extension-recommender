@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { SessionOperations, SessionResult } from "../lib";
+// @ts-ignore
+import { SessionOperations, SessionResult } from "../dist/lib";
 
 function expectExtension(results: Array<SessionResult>, extensionIds: string[] | string, expectedRelativeConfidence = 0.6) {
 	const resultIds = results.map(r => r.extensionId);

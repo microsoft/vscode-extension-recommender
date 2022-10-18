@@ -73,6 +73,10 @@ export class SessionOperations {
 		const modelPath = path.join(__dirname, '..', 'model');
 
 		env.wasm.numThreads = 1;
+		env.wasm.simd = false;
+		env.wasm.wasmPaths = {
+			'ort-wasm.wasm': path.join(__dirname, '..', 'ort-wasm.wasm')
+		};
 		this._session = await InferenceSession.create(path.join(modelPath, 'model.onnx'), {
 			executionProviders: ['wasm']
 		});

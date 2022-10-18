@@ -6,6 +6,7 @@
 
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = function (env, argv) {
 	const mode = argv.mode || 'none';
@@ -53,15 +54,26 @@ module.exports = function (env, argv) {
 						},
 					},
 					exclude: /\.d\.ts$/,
-				},
+				}
 			],
 		},
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
 			alias: {
-				'@tensorflow/tfjs': path.resolve(__dirname, 'node_modules', '@tensorflow', 'tfjs', 'dist', 'tf.es2017.js'),
+				'onnxruntime-web': path.resolve(__dirname, 'node_modules', 'onnxruntime-web', 'dist', 'ort-web.node.js'),
 			},
 		},
+		plugins: [
+			new CopyPlugin({
+				patterns: [{
+					from: path.resolve(__dirname, 'node_modules', 'onnxruntime-web', 'dist', 'ort-wasm.wasm'),
+					to: path.resolve(__dirname, 'dist')
+				}, {
+					from: path.resolve(__dirname, 'model', '*'),
+					to: path.resolve(__dirname, 'dist')
+				}]
+			})
+		],
 		stats: {
 			preset: 'errors-warnings',
 			assets: true,
