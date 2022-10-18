@@ -66,7 +66,7 @@ module.exports = function (env, argv) {
 		plugins: [
 			new CopyPlugin({
 				patterns: [{
-					from: path.resolve(__dirname, 'node_modules', 'onnxruntime-web', 'dist', 'ort-wasm-simd.wasm'),
+					from: path.resolve(__dirname, 'node_modules', 'onnxruntime-web', 'dist', 'ort-wasm.wasm'),
 					to: path.resolve(__dirname, 'dist')
 				}, {
 					from: path.resolve(__dirname, 'model', '*'),
