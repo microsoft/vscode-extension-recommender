@@ -6,6 +6,8 @@ Deep learning model to recommend the best extension for a given VS Code workspac
 
 See `test` and API docs in `lib/index.ts`.
 
+Make a change for demo.
+
 ## Local development
 
 To build from source, follow these steps:
